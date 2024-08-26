@@ -6,7 +6,7 @@ bencode.py
 certifi >= 2016.9.26
 cffi >= 1.9.1
 defusedxml >= 0.5.0
-dfdatetime >= 20240504
+dfdatetime >= 20240330
 dfvfs >= 20240115
 dfwinreg >= 20240229
 dtfabric >= 20230518
@@ -46,6 +46,7 @@ libvsapm-python >= 20230506
 libvsgpt-python >= 20211115
 libvshadow-python >= 20160109
 libvslvm-python >= 20160109
+lief >= 0.15.1
 lz4 >= 0.10.0
 opensearch-py
 pefile >= 2023.2.7

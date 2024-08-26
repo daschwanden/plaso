@@ -1,7 +1,6 @@
 certifi >= 2023.11.17
 docutils
 Markdown
-pyparsing
 recommonmark
 sphinx >= 4.1.0
 sphinx-markdown-tables

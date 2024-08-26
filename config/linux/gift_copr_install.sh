@@ -43,6 +43,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libvsgpt-python3
                       libvshadow-python3
                       libvslvm-python3
+                      lief
                       python3-XlsxWriter
                       python3-acstore
                       python3-artifacts

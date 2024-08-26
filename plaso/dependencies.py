@@ -27,6 +27,7 @@ PYTHON_DEPENDENCIES = {
     'dfwinreg': ('__version__', '20240229', None, True),
     'dtfabric': ('__version__', '20230518', None, True),
     'flor': ('__version__', '1.1.3', None, False),
+    'lief': ('__version__', '0.15.1', None, True),
     'lz4': ('__version__', '0.10.0', None, True),
     'opensearchpy': ('__versionstr__', '', None, False),
     'pefile': ('__version__', '2023.2.7', None, True),

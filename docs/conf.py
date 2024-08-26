@@ -38,7 +38,7 @@ extensions = [
 
 # We cannot install architecture dependent Python modules on readthedocs,
 # therefore we mock most imports.
-pip_installed_modules = set(['pyparsing'])
+pip_installed_modules = set()
 
 dependency_helper = utils.dependencies.DependencyHelper(
     dependencies_file=os.path.join('..', 'dependencies.ini'),
@@ -58,8 +58,8 @@ napoleon_include_special_with_doc = True
 
 # General information about the project.
 # pylint: disable=redefined-builtin
-project = 'Plaso (log2timeline)'
-copyright = 'The Plaso (log2timeline) authors'
+project = 'plaso (log2timeline)'
+copyright = 'The plaso (log2timeline) authors'
 version = plaso.__version__
 release = plaso.__version__
 
@@ -90,16 +90,6 @@ htmlhelp_basename = 'plasodoc'
 # -- Options linkcheck ----------------------------------------------------
 
 linkcheck_ignore = [
-    '[^#/]*#',
-    '(|[.][.]/)api/[^#]*#',
-    '(|[.][.]/)developer/[^#]*#',
-    '(|[.][.]/)user/[^#]*#',
-    # The docs.github.com are known to be flaky.
-    'https://docs.github.com/.*',
-    'https://github.com/libyal/libsigscan/wiki/Internals#',
-    'https://github.com/log2timeline/dfvfs/wiki#',
-    'https://groups.google.com/forum/#',
-    'https://developers.virustotal.com/reference#',
 ]
 
 
@@ -127,10 +117,7 @@ class MarkdownLinkFixer(transforms.Transform):
 
   default_priority = 1000
 
-  _URI_PREFIXES = [
-      'https://github.com/log2timeline/l2tdocs/blob/',
-      'https://github.com/log2timeline/l2tbinaries/blob/',
-      'https://github.com/google/timesketch/blob/']
+  _URI_PREFIXES = []
 
   def _FixLinks(self, node):
     """Corrects links to .md files not part of the documentation.
