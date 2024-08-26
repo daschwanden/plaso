@@ -60,6 +60,6 @@ class MachoParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     except Exception as exception:
       raise errors.WrongParser(
           'Unable to read Mach-O file with error: {0!s}'.format(exception))
-    print('+++++++++++++++++')
+    print('++++++++++++++++++')
 
 manager.ParsersManager.RegisterParser(MachoParser)
