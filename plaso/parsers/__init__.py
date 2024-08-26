@@ -19,6 +19,7 @@ from plaso.parsers import fseventsd
 from plaso.parsers import java_idx
 from plaso.parsers import jsonl_parser
 from plaso.parsers import locate
+from plaso.parsers import macho
 from plaso.parsers import macos_keychain
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
