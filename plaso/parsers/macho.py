@@ -37,8 +37,9 @@ class MachoParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   def GetFormatSpecification(cls):
     """Retrieves the format specification."""
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'\xfe\xed\xfa\xce', offset=0)
-    format_specification.AddNewSignature(b'\xfe\xed\xfa\xcf', offset=0)
+    format_specification.AddNewSignature(b'\xca\xfe\xba\xbe', offset=0)
+    format_specification.AddNewSignature(b'\xce\xfa\xed\xfe', offset=0)
+    format_specification.AddNewSignature(b'\xcf\xfa\xed\xfe', offset=0)
     return format_specification
   
   def ParseFileObject(self, parser_mediator, file_object):
@@ -53,11 +54,12 @@ class MachoParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       WrongParser: when the file cannot be parsed.
     """
     macho_data_slice = dfvfs_data_slice.DataSlice(file_object)
+    print(macho_data_slice.__len__())
     try:
-      macho_binary = lief.MachO.parse(raw=macho_data_slice)
-      print(macho_binary)
+      macho_binary = lief.MachO.parse(raw=macho_data_slice, config=lief.MachO.ParserConfig.deep)
     except Exception as exception:
       raise errors.WrongParser(
           'Unable to read Mach-O file with error: {0!s}'.format(exception))
+    print('+++++++++++++++++')
 
 manager.ParsersManager.RegisterParser(MachoParser)
