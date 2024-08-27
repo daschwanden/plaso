@@ -806,8 +806,14 @@ data_type: 'macos:macho:file'
 attribute_mappings:
 - name: 'name'
   description: 'Name of the file'
+- name: 'num_binaries'
+  description: 'Number of binaries in the file'
 - name: 'size'
   description: 'Size of the file'
+- name: 'cpu_type'
+  description: 'cpu type of the binary'
+- name: 'cpu_subtype'
+  description: 'cpu subtype of the binary'
 place_holder_event: true
 ---
 data_type: 'macos:notes:entry'
