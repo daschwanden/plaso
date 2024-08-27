@@ -802,6 +802,14 @@ attribute_mappings:
   description: 'Downloaded Time'
 place_holder_event: true
 ---
+data_type: 'macos:macho:file'
+attribute_mappings:
+- name: 'name'
+  description: 'Name of the file'
+- name: 'size'
+  description: 'Size of the file'
+place_holder_event: true
+---
 data_type: 'macos:notes:entry'
 attribute_mappings:
 - name: 'creation_time'

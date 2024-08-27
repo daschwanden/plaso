@@ -6,32 +6,36 @@ import os
 
 from dfvfs.helpers import data_slice as dfvfs_data_slice
 
+from plaso.containers import events
 from plaso.lib import dtfabric_helper
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
+class MachoFileEventData(events.EventData):
+  """Mach-O file event data.
 
-class MachoParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
+  Attributes:
+    name (str): name of the file.
+    size (int): size of the file.
+  """
+
+  DATA_TYPE = 'macos:macho:file'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(MachoFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.name = None
+    self.size = None
+
+class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
   """Parser for Macho files."""
 
   NAME = 'macho'
   DATA_FORMAT = 'Mach-O file'
 
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'macho.yaml')
-
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a Macho-O file.
-
-    Args:
-      parser_mediator (ParserMediator): parser mediator.
-      file_object (dfvfs.FileIO): file-like object to be parsed.
-
-    Raises:
-      WrongParser: when the format is not supported by the parser, this will
-          signal the event extractor to apply other parsers.
-    """
+  #_DEFINITION_FILE = os.path.join(
+  #    os.path.dirname(__file__), 'macho.yaml')
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -41,25 +45,25 @@ class MachoParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     format_specification.AddNewSignature(b'\xce\xfa\xed\xfe', offset=0)
     format_specification.AddNewSignature(b'\xcf\xfa\xed\xfe', offset=0)
     return format_specification
-  
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a Mach-O file-like object.
+
+  def ParseFileEntry(self, parser_mediator, file_entry):
+    """Parses a Mach-O file entry.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): a file-like object.
+      parser_mediator (ParserMediator): parser mediator.
+      file_entry (dfvfs.FileEntry): file entry to be parsed.
+    """    
+    filename = parser_mediator.GetFilename()
+    relative_path = parser_mediator.GetRelativePath()
+    print(filename)
+    print(relative_path)
 
-    Raises:
-      WrongParser: when the file cannot be parsed.
-    """
-    macho_data_slice = dfvfs_data_slice.DataSlice(file_object)
-    print(macho_data_slice.__len__())
-    try:
-      macho_binary = lief.MachO.parse(raw=macho_data_slice, config=lief.MachO.ParserConfig.deep)
-    except Exception as exception:
-      raise errors.WrongParser(
-          'Unable to read Mach-O file with error: {0!s}'.format(exception))
-    print('++++++++++++++++++')
+    macho_binary = lief.MachO.parse(relative_path, config=lief.MachO.ParserConfig.quick)
+    #print(macho_binary)
+
+    event_data = MachoFileEventData()    
+    event_data.name = filename
+    event_data.size = file_entry.size
+    parser_mediator.ProduceEventData(event_data)
 
 manager.ParsersManager.RegisterParser(MachoParser)
