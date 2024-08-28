@@ -14,7 +14,6 @@ from plaso.parsers import manager
 
 class MachoFileEventData(events.EventData):
   """Mach-O file event data.
-
   Attributes:
     name (str): name of the binary.
     num_binary (int): amount of binaries.
@@ -38,7 +37,6 @@ class MachoFileEventData(events.EventData):
 
 class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
   """Parser for Macho files."""
-
   NAME = 'macho'
   DATA_FORMAT = 'Mach-O file'
 
@@ -51,37 +49,28 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
   def _ParseFatMachoBinary(self, parser_mediator, fat_binary, file_name, file_size):
     """Parses a Mach-O fat binary.
-
     Args:
       parser_mediator (ParserMediator): parser mediator.
       fat_binary (lief.FatBinary): fat binary to be parsed.
       file_name (str): file name of the fat binary.
       file_size (int): file size of the fat binary.
     """
-    print('--------- start _ParseFatMachoBinary ------------')
     event_data = MachoFileEventData()    
     event_data.name = file_name
     event_data.num_binaries = fat_binary.size
     event_data.size = file_size
     parser_mediator.ProduceEventData(event_data)
 
-    #x = fat_binary.it_binaries
-    #print(fat_binary.at(0))
-
     for binary in fat_binary:
       self._ParseMachoBinary(parser_mediator, binary, file_name)
 
-    print('--------- end _ParseFatMachoBinary ------------')
-
   def _ParseMachoBinary(self, parser_mediator, binary, file_name):
     """Parses a Mach-O binary.
-
     Args:
       parser_mediator (ParserMediator): parser mediator.
       binary (lief.Binary): binary to be parsed.
       filename (str): file name
     """
-    print('----- Parse Macho Binary ------')
     print(binary.header.cpu_type)
     event_data = MachoFileEventData()    
     event_data.name = file_name
@@ -89,7 +78,8 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     event_data.cpu_type = binary.header.cpu_type.value
     event_data.cpu_subtype = binary.header.cpu_subtype
     if binary.has_code_signature:
-      #print(binary.code_signature.content.tobytes())
+      # TODO: Do something useful with the signarure
+      # print(binary.code_signature.content.tobytes())
       print(binary.code_signature.data_size)
     parser_mediator.ProduceEventData(event_data)
 
@@ -104,7 +94,6 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
   def ParseFileEntry(self, parser_mediator, file_entry):
     """Parses a Mach-O file entry.
-
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry to be parsed.
@@ -121,7 +110,5 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       self._ParseFatMachoBinary(parser_mediator, macho_binary, file_name, file_entry.size)
     elif isinstance(macho_binary, lief.MachO.Binary):
       self._ParseMachoBinary(parser_mediator, macho_binary, file_name)
-    else:
-      print('--------- no binary type detected ----------')
 
 manager.ParsersManager.RegisterParser(MachoParser)
