@@ -58,25 +58,25 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
   #_DEFINITION_FILE = os.path.join(
   #    os.path.dirname(__file__), 'macho.yaml')
 
-  def _GetDigest(self, hasher, file_entry):
+  def _GetDigest(self, hasher, file_entry, offset, size):
     """Executes a hasher and returns the digest.
     Args:
       hasher (BaseHasher): hasher to execute.
       file_entry (dfvfs.file_entry): file entry whose default data stream will
           be hashed.
+      offset (int): offset in file entry from where to read.
+      size (int): amount of bytes to read.
 
      Returns:
-      digest (bytes): digest returned by hasher.
+      digest (str): digest returned by hasher.
     """
     file_object = file_entry.GetFileObject()
 
     # Make sure we are starting from the beginning of the file.
-    file_object.seek(0, os.SEEK_SET)
+    file_object.seek(offset, os.SEEK_SET)
 
-    data = file_object.read(self._DEFAULT_READ_SIZE)
-    while data:
-      hasher.Update(data)
-      data = file_object.read(self._DEFAULT_READ_SIZE)
+    data = file_object.read(size)
+    hasher.Update(data)
 
     return hasher.GetStringDigest()
 
@@ -88,9 +88,14 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       file_name (str): file name of the fat binary.
       file_entry (dfvfs.FileEntry): file entry to be parsed.
     """
-    ent = self._GetDigest(entropy.EntropyHasher(), file_entry)
-    md5_hash = self._GetDigest(md5.MD5Hasher(), file_entry)
-    sha256_hash = self._GetDigest(sha256.SHA256Hasher(), file_entry)
+    print('---------- start fat binary ------------')
+    print('size: ' + str (file_entry.size))
+    ent = self._GetDigest(entropy.EntropyHasher(), file_entry, 0, file_entry.size)
+    md5_hash = self._GetDigest(md5.MD5Hasher(), file_entry, 0, file_entry.size)
+    sha256_hash = self._GetDigest(sha256.SHA256Hasher(), file_entry, 0, file_entry.size)
+    print('entropy: ' + str(ent))
+    print('md5: ' + str(md5_hash))
+    print('sha256: ' + str(sha256_hash))
 
     event_data = MachoFileEventData()    
     event_data.name = file_name
@@ -100,28 +105,47 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     event_data.md5 = md5_hash
     event_data.sha256 = sha256_hash
     parser_mediator.ProduceEventData(event_data)
+    print('----------- end fat binary -------------')
 
     for binary in fat_binary:
-      self._ParseMachoBinary(parser_mediator, binary, file_name)
+      self._ParseMachoBinary(parser_mediator, binary, file_name, file_entry)
 
-  def _ParseMachoBinary(self, parser_mediator, binary, file_name):
+  def _ParseMachoBinary(self, parser_mediator, binary, file_name, file_entry):
     """Parses a Mach-O binary.
     Args:
       parser_mediator (ParserMediator): parser mediator.
       binary (lief.Binary): binary to be parsed.
-      filename (str): file name
+      filename (str): file name of the binary.
+      file_entry (dfvfs.FileEntry): file entry to be parsed.
     """
+    print('------------ start binary --------------')
     print(binary.header.cpu_type)
+    fat_offset = binary.fat_offset
+    original_size = binary.original_size
+    print('fat offset: ' + str(fat_offset))
+    print('size: ' + str (original_size))
+    ent = self._GetDigest(entropy.EntropyHasher(), file_entry, fat_offset, original_size)
+    md5_hash = self._GetDigest(md5.MD5Hasher(), file_entry, fat_offset, original_size)
+    sha256_hash = self._GetDigest(sha256.SHA256Hasher(), file_entry, fat_offset, original_size)
+    print('entropy: ' + str(ent))
+    print('md5: ' + str(md5_hash))
+    print('sha256: ' + str(sha256_hash))
+
     event_data = MachoFileEventData()    
     event_data.name = file_name
     event_data.num_binaries = 1
     event_data.cpu_type = binary.header.cpu_type.value
     event_data.cpu_subtype = binary.header.cpu_subtype
+    event_data.entropy = ent
+    event_data.md5 = md5_hash
+    event_data.sha256 = sha256_hash
     if binary.has_code_signature:
       # TODO: Do something useful with the signarure
       # print(binary.code_signature.content.tobytes())
-      print(binary.code_signature.data_size)
+      print('signature size: ' + str(binary.code_signature.data_size))
     parser_mediator.ProduceEventData(event_data)
+    print('------------- end binary ---------------')
+
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -140,7 +164,7 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     """    
     file_name = parser_mediator.GetFilename()
     relative_path = parser_mediator.GetRelativePath()
-    print(file_name)
+    #print(file_name)
     print(relative_path)
 
     macho_binary = lief.MachO.parse(relative_path, config=lief.MachO.ParserConfig.quick)
@@ -149,6 +173,6 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     if isinstance(macho_binary, lief.MachO.FatBinary):
       self._ParseFatMachoBinary(parser_mediator, macho_binary, file_name, file_entry)
     elif isinstance(macho_binary, lief.MachO.Binary):
-      self._ParseMachoBinary(parser_mediator, macho_binary, file_name)
+      self._ParseMachoBinary(parser_mediator, macho_binary, file_name, file_entry)
 
 manager.ParsersManager.RegisterParser(MachoParser)
