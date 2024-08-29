@@ -814,6 +814,14 @@ attribute_mappings:
   description: 'cpu type of the binary'
 - name: 'cpu_subtype'
   description: 'cpu subtype of the binary'
+- name: 'signature'
+  description: 'signature of the binary'
+- name: 'entropy'
+  description: 'entropy of the binary'
+- name: 'md5'
+  description: 'md5 of the binary'
+- name: 'sha256'
+  description: 'sha256 of the binary'
 place_holder_event: true
 ---
 data_type: 'macos:notes:entry'
