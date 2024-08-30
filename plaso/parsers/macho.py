@@ -27,6 +27,7 @@ class MachoFileEventData(events.EventData):
     entropy (str): entropy of the binary.
     md5 (str): md5 of the binary.
     sha256 (str): sha256 of the binary.
+    segment_names (list[str]): names of the sections in the Mach-O file.
   """
 
   DATA_TYPE = 'macos:macho:file'
@@ -43,6 +44,7 @@ class MachoFileEventData(events.EventData):
     self.entropy = None
     self.md5 = None
     self.sha256 = None
+    self.segment_names = None
 
 class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
   """Parser for Macho files."""
@@ -62,8 +64,7 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     """Executes a hasher and returns the digest.
     Args:
       hasher (BaseHasher): hasher to execute.
-      file_entry (dfvfs.file_entry): file entry whose default data stream will
-          be hashed.
+      file_entry (dfvfs.file_entry): file entry to be hashed.
       offset (int): offset in file entry from where to read.
       size (int): amount of bytes to read.
 
@@ -80,11 +81,42 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
     return hasher.GetStringDigest()
 
+  def _GetSectionNames(self, segment):
+    """Retrieves Mach-O segment section names.
+    Args:
+      segment (lief.MachO.SegmentCommand): binary to be parsed.
+
+    Returns:
+      list[str]: names of the segments.
+    """
+    section_names = []
+    for section in segment.sections:
+      #print('  ' + str(section.name))
+      section_names.append(section.name)
+    return section_names
+
+  def _GetSegmentNames(self, binary):
+    """Retrieves Mach-O segment names.
+    Args:
+      binary (lief.MachO.Binary): binary to be parsed.
+
+    Returns:
+      list[str]: names of the segments.
+    """
+    segment_names = []
+    for segment in binary.segments:
+      section_names = []
+      print(segment.name)
+      segment_names.append(segment.name)
+      section_names = self._GetSectionNames(binary)
+      # TODO: How do we want to surface the section names
+    return segment_names
+
   def _ParseFatMachoBinary(self, parser_mediator, fat_binary, file_name, file_entry):
     """Parses a Mach-O fat binary.
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      fat_binary (lief.FatBinary): fat binary to be parsed.
+      fat_binary (lief.MachO.FatBinary): fat binary to be parsed.
       file_name (str): file name of the fat binary.
       file_entry (dfvfs.FileEntry): file entry to be parsed.
     """
@@ -114,7 +146,7 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     """Parses a Mach-O binary.
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      binary (lief.Binary): binary to be parsed.
+      binary (lief.MachO.Binary): binary to be parsed.
       filename (str): file name of the binary.
       file_entry (dfvfs.FileEntry): file entry to be parsed.
     """
@@ -143,6 +175,7 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       # TODO: Do something useful with the signarure
       # print(binary.code_signature.content.tobytes())
       print('signature size: ' + str(binary.code_signature.data_size))
+    event_data.segment_names = self._GetSegmentNames(binary)
     parser_mediator.ProduceEventData(event_data)
     print('------------- end binary ---------------')
 
