@@ -112,7 +112,7 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       # TODO: How do we want to surface the section names
     return segment_names
 
-  def _ParseFatMachoBinary(self, parser_mediator, fat_binary, file_name, file_entry):
+  def _ParseMachoFatBinary(self, parser_mediator, fat_binary, file_name, file_entry):
     """Parses a Mach-O fat binary.
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -177,8 +177,10 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       print('signature size: ' + str(binary.code_signature.data_size))
     event_data.segment_names = self._GetSegmentNames(binary)
     parser_mediator.ProduceEventData(event_data)
-    print('------------- end binary ---------------')
 
+    #for symbol in binary.imported_symbols:
+    #  print(symbol)
+    print('------------- end binary ---------------')
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -204,7 +206,7 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     #print(macho_binary)
 
     if isinstance(macho_binary, lief.MachO.FatBinary):
-      self._ParseFatMachoBinary(parser_mediator, macho_binary, file_name, file_entry)
+      self._ParseMachoFatBinary(parser_mediator, macho_binary, file_name, file_entry)
     elif isinstance(macho_binary, lief.MachO.Binary):
       self._ParseMachoBinary(parser_mediator, macho_binary, file_name, file_entry)
 
