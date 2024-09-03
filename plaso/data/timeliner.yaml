@@ -822,6 +822,8 @@ attribute_mappings:
   description: 'md5 of the binary'
 - name: 'sha256'
   description: 'sha256 of the binary'
+- name: 'symhash'
+  description: 'symhash of the binary'
 - name: 'segment_names'
   description: 'segments in the binary'
 place_holder_event: true

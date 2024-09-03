@@ -27,6 +27,7 @@ class MachoFileEventData(events.EventData):
     entropy (str): entropy of the binary.
     md5 (str): md5 of the binary.
     sha256 (str): sha256 of the binary.
+    symhash (str): symhash of the binary.
     segment_names (list[str]): names of the sections in the Mach-O file.
   """
 
@@ -44,6 +45,7 @@ class MachoFileEventData(events.EventData):
     self.entropy = None
     self.md5 = None
     self.sha256 = None
+    self.symhash = None
     self.segment_names = None
 
 class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
@@ -106,11 +108,21 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     segment_names = []
     for segment in binary.segments:
       section_names = []
-      print(segment.name)
+      #print(segment.name)
       segment_names.append(segment.name)
       section_names = self._GetSectionNames(binary)
       # TODO: How do we want to surface the section names
     return segment_names
+
+  def _GetSymhash(self, binary):
+    symbol_list = []
+    for symbol in binary.imported_symbols:
+      if symbol.type == 0 and symbol.origin == lief._lief.MachO.Symbol.ORIGIN.LC_SYMTAB:
+        symbol_list.append(symbol.demangled_name)
+    hasher = md5.MD5Hasher()
+    hasher.Update(','.join(sorted(symbol_list)).encode())
+    symhash = hasher.GetStringDigest()
+    return symhash
 
   def _ParseMachoFatBinary(self, parser_mediator, fat_binary, file_name, file_entry):
     """Parses a Mach-O fat binary.
@@ -159,9 +171,11 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     ent = self._GetDigest(entropy.EntropyHasher(), file_entry, fat_offset, original_size)
     md5_hash = self._GetDigest(md5.MD5Hasher(), file_entry, fat_offset, original_size)
     sha256_hash = self._GetDigest(sha256.SHA256Hasher(), file_entry, fat_offset, original_size)
+    sym_hash = self._GetSymhash(binary)
     print('entropy: ' + str(ent))
     print('md5: ' + str(md5_hash))
     print('sha256: ' + str(sha256_hash))
+    print('symhash: ' + str(sym_hash))
 
     event_data = MachoFileEventData()    
     event_data.name = file_name
@@ -171,6 +185,7 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     event_data.entropy = ent
     event_data.md5 = md5_hash
     event_data.sha256 = sha256_hash
+    event_data.symhash = sym_hash
     if binary.has_code_signature:
       # TODO: Do something useful with the signarure
       # print(binary.code_signature.content.tobytes())
@@ -180,6 +195,7 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
     #for symbol in binary.imported_symbols:
     #  print(symbol)
+    
     print('------------- end binary ---------------')
 
   @classmethod
