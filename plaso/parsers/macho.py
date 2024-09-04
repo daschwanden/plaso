@@ -150,6 +150,11 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     super_blob_magic = signature_bytes[0:4]
     if super_blob_magic == self._CSMAGIC_EMBEDDED_SIGNATURE:
       print('*** found embedded signature ***')
+      super_blob_length = int.from_bytes(signature_bytes[5:8], "big")
+      generic_blob_count = int.from_bytes(signature_bytes[9:12], "big")
+      print('super_blob_length: ' + str(super_blob_length))
+      print('generic_blob_count: ' + str(generic_blob_count))
+      
 
   def _ParseMachoFatBinary(self, parser_mediator, fat_binary, file_name, file_entry):
     """Parses a Mach-O fat binary.
