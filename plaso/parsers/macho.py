@@ -115,6 +115,13 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     return segment_names
 
   def _GetSymhash(self, binary):
+    """Retrieves Mach-O segment names.
+    Args:
+      binary (lief.MachO.Binary): binary to be parsed.
+
+    Returns:
+      symhash (str): symhash of the binary.
+    """
     symbol_list = []
     for symbol in binary.imported_symbols:
       if symbol.type == 0 and symbol.origin == lief._lief.MachO.Symbol.ORIGIN.LC_SYMTAB:
@@ -188,14 +195,10 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     event_data.symhash = sym_hash
     if binary.has_code_signature:
       # TODO: Do something useful with the signarure
-      # print(binary.code_signature.content.tobytes())
+      print(binary.code_signature.content.hex())
       print('signature size: ' + str(binary.code_signature.data_size))
     event_data.segment_names = self._GetSegmentNames(binary)
     parser_mediator.ProduceEventData(event_data)
-
-    #for symbol in binary.imported_symbols:
-    #  print(symbol)
-    
     print('------------- end binary ---------------')
 
   @classmethod
