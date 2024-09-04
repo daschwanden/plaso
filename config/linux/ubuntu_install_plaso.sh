@@ -53,6 +53,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      lief
                      python3-acstore
                      python3-artifacts
+                     python3-asn1crypto
                      python3-bencode
                      python3-certifi
                      python3-cffi-backend

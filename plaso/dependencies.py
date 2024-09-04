@@ -18,6 +18,7 @@ import re
 PYTHON_DEPENDENCIES = {
     'acstore': ('__version__', '20240407', None, True),
     'artifacts': ('__version__', '20220219', None, True),
+    'asn1crypto': ('', '0.24.0', None, True),
     'bencode': ('', '', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'dateutil': ('__version__', '1.5', None, True),

@@ -59,6 +59,10 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
   _MAGIC_32_SIGNATURE = b'\xce\xfa\xed\xfe'
   _MAGIC_64_SIGNATURE = b'\xcf\xfa\xed\xfe'
 
+  # Code signature constants
+  _CSMAGIC_EMBEDDED_SIGNATURE = b'\xfa\xde\x0c\xc0' # embedded form of signature data
+  _CSMAGIC_BLOBWRAPPER = b'\xfa\xde\x0b\x01'        # CMS Signature, among other things
+
   #_DEFINITION_FILE = os.path.join(
   #    os.path.dirname(__file__), 'macho.yaml')
 
@@ -131,6 +135,22 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     symhash = hasher.GetStringDigest()
     return symhash
 
+  def _ParseCodeSignature(self, code_signature):
+    """Parses Mach-O code signature.
+       Details about the code signature structure on GitHub
+       https://github.com/apple-oss-distributions/xnu/blob/94d3b452840153a99b38a3a9659680b2a006908e/osfmk/kern/cs_blobs.h#L267
+    Args:
+      code_signature (lief.MachO.CodeSignature): code signature to be parsed.
+
+    Returns:
+      
+    """
+    signature_bytes = code_signature.content.tobytes()
+    #print(signature_bytes)
+    super_blob_magic = signature_bytes[0:4]
+    if super_blob_magic == self._CSMAGIC_EMBEDDED_SIGNATURE:
+      print('*** found embedded signature ***')
+
   def _ParseMachoFatBinary(self, parser_mediator, fat_binary, file_name, file_entry):
     """Parses a Mach-O fat binary.
     Args:
@@ -195,8 +215,8 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     event_data.symhash = sym_hash
     if binary.has_code_signature:
       # TODO: Do something useful with the signarure
-      print(binary.code_signature.content.hex())
       print('signature size: ' + str(binary.code_signature.data_size))
+      self._ParseCodeSignature(binary.code_signature)
     event_data.segment_names = self._GetSegmentNames(binary)
     parser_mediator.ProduceEventData(event_data)
     print('------------- end binary ---------------')
