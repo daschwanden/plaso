@@ -146,16 +146,37 @@ class MachoParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       
     """
     signature_bytes = code_signature.content.tobytes()
-    #print(signature_bytes)
+    #print(code_signature.content.hex())
     super_blob_magic = signature_bytes[0:4]
-    if super_blob_magic == self._CSMAGIC_EMBEDDED_SIGNATURE:
+    if super_blob_magic != self._CSMAGIC_EMBEDDED_SIGNATURE:
+      print('*** no embedded code signature detected ***')
+    else:
       print('*** found embedded signature ***')
       super_blob_length = int.from_bytes(signature_bytes[5:8], "big")
       generic_blob_count = int.from_bytes(signature_bytes[9:12], "big")
       print('super_blob_length: ' + str(super_blob_length))
       print('generic_blob_count: ' + str(generic_blob_count))
-      
-
+      for i in range(generic_blob_count):
+        # lets walk through the CS_BlobIndex index[] entries
+        # https://github.com/apple-oss-distributions/xnu/blob/94d3b452840153a99b38a3a9659680b2a006908e/osfmk/kern/cs_blobs.h#L280C15-L280C22
+        print(' index: ' + str(i))
+        start_type = 13 + i*8 # uint32_t type
+        start_offset = start_type + 4 # uint32_t offset
+        print(' start_type  : ' + str(start_type))
+        print(' start_offset: ' + str(start_offset))
+        blob_index_type = signature_bytes[start_type:start_type+3]
+        blob_index_offset = int.from_bytes(signature_bytes[start_offset:start_offset+3], "big")
+        #print('   type  : ' + str(blob_index_type))
+        #print('   offset: ' + str(blob_index_offset))
+        generic_blob_magic = signature_bytes[blob_index_offset:blob_index_offset+4]
+        generic_blob_length = int.from_bytes(signature_bytes[blob_index_offset+5:blob_index_offset+9], "big")
+        if generic_blob_magic == self._CSMAGIC_BLOBWRAPPER:
+          blobwrapper_base = blob_index_offset+10
+          print('     magic : ' + str(generic_blob_magic))
+          print('     length: ' + str(generic_blob_length))
+          cert = signature_bytes[blobwrapper_base:blobwrapper_base+generic_blob_length]
+          #print(cert.hex())
+        
   def _ParseMachoFatBinary(self, parser_mediator, fat_binary, file_name, file_entry):
     """Parses a Mach-O fat binary.
     Args:
